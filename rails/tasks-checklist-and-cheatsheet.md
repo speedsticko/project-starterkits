@@ -1,4 +1,4 @@
-Checklists for Common and Uncommon Rails Tasks
+Checklists and Cheatsheets for Common and Uncommon Rails Tasks
 ----------------------------------------------
 
 Start a rails project
