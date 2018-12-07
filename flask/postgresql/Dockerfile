@@ -1,6 +1,6 @@
 FROM postgres:10
  
 # Set environment variables
-ENV POSTGRES_USER <postgres_user>
-ENV POSTGRES_PASSWORD <postgres_password>
-ENV POSTGRES_DB <postgres_database>
+ENV POSTGRES_USER $POSTGRES_USER
+ENV POSTGRES_PASSWORD $POSTGRES_PASSWORD
+ENV POSTGRES_DB $POSTGRES_DB
