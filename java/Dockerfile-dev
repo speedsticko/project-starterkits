@@ -1,0 +1,55 @@
+FROM centos:7
+RUN yum -y update \
+&& yum -y install \
+   --setopt=tsflags=nodocs \
+   --disableplugin=fastestmirror \
+   epel-release \
+&& yum -y install \
+inotify-tools \
+java-1.8.0-openjdk-devel \
+&& yum clean all \
+&& rm -rf /etc/ld.so.cache
+
+#doesn't work: ENV JAVA_HOME $(update-alternatives --list | grep java_sdk_openjdk | cut -f3)
+
+# ----
+# Install Git
+RUN yum -y install git
+
+# Install Maven
+ARG MAVEN_VERSION=3.3.9
+ARG USER_HOME_DIR="/root"
+RUN mkdir -p /usr/share/maven && \
+curl -fsSL http://apache.osuosl.org/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz | tar -xzC /usr/share/maven --strip-components=1 && \
+ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
+ENV MAVEN_HOME /usr/share/maven
+ENV MAVEN_CONFIG "$USER_HOME_DIR/.m2"
+# speed up Maven JVM a bit
+ENV MAVEN_OPTS="-XX:+TieredCompilation -XX:TieredStopAtLevel=1"
+
+# use /project for code and /repository volumes
+COPY setup/settings.xml /settings.xml
+
+## this copies our settings.xml to the default place where maven will look for it.
+
+RUN rm -f /usr/share/maven/conf/settings.xml >/dev/null
+RUN cp /settings.xml /usr/share/maven/conf/settings.xml
+
+# set up entrypoint.sh to perform user customizations on container start
+ADD setup/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Add French Canada Locale
+RUN localedef -i fr_CA -c -f UTF-8 fr_CA.UTF-8
+
+RUN useradd -ms /usr/bash klim-user
+
+USER klim-user
+
+VOLUME ["/project", "/repository"]
+WORKDIR /project
+
+# treat entrypoint.sh as a .bashrc
+# RUN source /entrypoint.sh
+# and don't use ENTRYPOINT file so we can keep the iteractive shell
+#ENTRYPOINT ["/entrypoint.sh"]
